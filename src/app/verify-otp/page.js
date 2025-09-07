@@ -12,7 +12,6 @@ export default function VerifyOtp() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  // أول ما يفتح الصفحة، لو عنده session نخزن الإيميل بتاعه
   useEffect(() => {
     if (session?.user?.email) {
       localStorage.setItem("userEmail", session.user.email);
@@ -33,11 +32,16 @@ export default function VerifyOtp() {
       if (otp === "1234") {
         localStorage.removeItem("pendingAuth");
 
-        // بعد ما يتأكد يخزّن الاسم/الايميل عشان ما يرجعش للـ login
-        localStorage.setItem("userName", session?.user?.name || "User");
-        localStorage.setItem("userEmail", session?.user?.email || "");
+        const existingName = localStorage.getItem("userName");
+        const nameToStore = existingName && existingName.trim().length > 0
+          ? existingName
+          : (session?.user?.name || "");
+        const emailToStore = session?.user?.email || localStorage.getItem("userEmail") || "";
 
-        router.push("/"); // يروح على الصفحة الرئيسية
+        if (nameToStore) localStorage.setItem("userName", nameToStore);
+        if (emailToStore) localStorage.setItem("userEmail", emailToStore);
+
+        router.push("/"); 
       } else {
         setError("❌ OTP incorrect");
       }
