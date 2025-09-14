@@ -1,9 +1,32 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 const handler = NextAuth({
   providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email?.trim();
+        const password = credentials?.password;
+
+        if (!email || !password) {
+          return null;
+        }
+
+        // قبول بسيط لغرض التجربة: أي بريد مع كلمة مرور بطول >= 4
+        if (password.length >= 4) {
+          return { id: email, name: email.split("@")[0], email };
+        }
+
+        return null;
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -22,13 +45,20 @@ const handler = NextAuth({
 
   callbacks: {
     async redirect({ url, baseUrl }) {
-      return `${baseUrl}/verify-otp`;
+      if (url.startsWith(baseUrl)) return url;
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      return baseUrl;
     },
 
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
+      // OAuth providers
       if (account && profile) {
-        token.email = profile.email;
-        token.name = profile.name || token.name;
+        token.email = profile?.email || token.email;
+        token.name = profile?.name || token.name;
+      }
+      if (user) {
+        token.email = user.email || token.email;
+        token.name = user.name || token.name;
       }
       return token;
     },

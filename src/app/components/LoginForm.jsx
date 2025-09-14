@@ -3,7 +3,7 @@
 import React from "react";
 import SocialLoginButtons from "./SocialLoginButtons";
 
-export default function LoginForm({ handleChange, formData, handleSubmit }) {
+export default function LoginForm({ handleChange, formData, handleSubmit, loading, error }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <h1 className="text-2xl font-bold mb-2">Welcome Back!</h1>
@@ -30,12 +30,16 @@ export default function LoginForm({ handleChange, formData, handleSubmit }) {
         onChange={handleChange}
       />
 
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <button
         type="submit"
-        className="bg-green-600 text-white p-2 rounded hover:bg-green-700 mt-2"
+        disabled={loading}
+        className={`text-white p-2 rounded mt-2 ${
+          loading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+        }`}
       >
-        Log In
+        {loading ? "Logging in..." : "Log In"}
       </button>
 
       <div className="flex items-center my-4">
